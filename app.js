@@ -37,11 +37,21 @@ function createGameArea() {
   gameAreaContext.strokeRect(0, 0, gameAreaWidth, gameAreaHeight);
 }
 
+// https://stackoverflow.com/a/58325961
+function generateHexString(len) {
+    let output = '';
+    for (let i = 0; i < len; ++i) {
+        output += (Math.floor(Math.random() * 16)).toString(16);
+    }
+    return output;
+}
+
 // Create food
 function createFood() {
   snakeFood = {
     x: Math.round(Math.random() * (gameAreaWidth - cellWidth) / cellWidth),
     y: Math.round(Math.random() * (gameAreaHeight - cellWidth) / cellWidth),
+    color: '#' + generateHexString(6)
   };
 }
 
@@ -56,11 +66,15 @@ function snakeOnItself(x, y, array) {
 function writeScore() {
   gameAreaContext.font = '50px sans-serif';
   gameAreaContext.fillStyle = '#FF0000';
-  gameAreaContext.fillText('Score: ' + playerScore, (gameAreaWidth / 2) - 100, gameAreaHeight / 2);
+  gameAreaContext.fillText('Punkte: ' + playerScore, (gameAreaWidth / 2) - 100, gameAreaHeight / 2);
 }
 
 function createSquare(x, y) {
-  gameAreaContext.fillStyle = '#000000';
+  createColoredSquare(x, y, '#000000')
+}
+
+function createColoredSquare(x, y, color) {
+  gameAreaContext.fillStyle = color;
   gameAreaContext.fillRect(x * cellWidth, y * cellWidth, cellWidth, cellWidth);
 }
 
@@ -89,27 +103,26 @@ function didSnakeEatTheFood(snakeX, snakeY) {
 
 function updateGameArea() {
 
-  var snakeAteFootVar = false;
+  var snakeAteFoodVar = false;
   var isSnakeOnItself = false
 
   createGameArea();
-  
+
   var newPosition = checkDirectionUpdatePosition();
   var snakeX = newPosition.snakeX;
   var snakeY = newPosition.snakeY;
-    
-  /*
+
+
   // make snake hit itself
-  var isSnakeOnItself = snakeOnItself(snakeX, snakeY, snake)  
+  var isSnakeOnItself = snakeOnItself(snakeX, snakeY, snake)
   if(isSnakeOnItself) {
     writeScore();
     clearInterval(timer);
     gameStart.disabled = false;
     return
   }
-    */
-  
-  /*
+
+
   // make snake hit the wall
   if(checkSnakeOutOfBounds(snakeX, snakeY, isSnakeOnItself)) {
     writeScore();
@@ -117,63 +130,68 @@ function updateGameArea() {
     gameStart.disabled = false;
     return
   }
-    */
-    
-  /*
+
+
   // make snake eat the food
-  snakeAteFootVar = didSnakeEatTheFood(snakeX, snakeY);
-  if (snakeAteFootVar) {
-    var newHead = { x: snakeX, y: snakeY };
+  snakeAteFoodVar = didSnakeEatTheFood(snakeX, snakeY);
+  if (snakeAteFoodVar) {
+    var newHead = {
+      x: snakeX,
+      y: snakeY,
+      color: snakeFood.color }
     playerScore += speedSize;
+
+    if(snake.length+1 % 4 == 0) {
+      speedSize += 1
+      restartTimer()
+    }
+
     createFood();
-  } 
-    */
-  
-  /*
+  }
+
   // make snake move
-  if(!snakeAteFootVar) {
+  if(!snakeAteFoodVar) {
     var newHead = snake.pop();
     newHead.x = snakeX;
     newHead.y = snakeY;
   }
   snake.unshift(newHead);
-  */
 
-  /*
   // create the snake
   for (var index = 0, length = snake.length; index < length; index++) {
-    createSquare(snake[index].x, snake[index].y);
-  } 
-    */
-    
-  /*
+    createColoredSquare(snake[index].x, snake[index].y, snake[index].color);
+  }
+
   // create the food
-  createSquare(snakeFood.x, snakeFood.y);
-  */
+  createColoredSquare(snakeFood.x, snakeFood.y, snakeFood.color);
 }
 
 function checkSnakeOutOfBounds(snakeX, snakeY) {
-  if ((snakeX == -1) || 
-    (snakeX == gameAreaWidth / cellWidth) || 
-    (snakeY == -1) || 
+  if ((snakeX == -1) ||
+    (snakeX == gameAreaWidth / cellWidth) ||
+    (snakeY == -1) ||
     (snakeY == gameAreaHeight / cellWidth)) {
       return true;
   }
   return false;
 }
 
+function restartTimer() {
+  // make the snake move automatically
+  clearInterval(timer);
+  timer = setInterval(updateGameArea, 500 / speedSize);
+}
+
 function startGame() {
 
   // initally create snake
   snake = [];
-  snake.push({ x: 0, y: cellWidth });
+  snake.push({ x: 0, y: cellWidth, color: '#' + generateHexString(6) });
 
   // create the food
-  //createFood();
+  createFood();
 
-  // make the snake move automatically
-  // clearInterval(timer);
-  // timer = setInterval(updateGameArea, 500 / speedSize);
+  restartTimer()
 }
 
 function stepOnClick() {
@@ -217,9 +235,9 @@ function initEvent() {
 }
 
 function init() {
-  //initElement();
-  //createGameArea()
-  //initEvent();
+  initElement();
+  createGameArea()
+  initEvent();
 }
 
 window.addEventListener('DOMContentLoaded', init);
